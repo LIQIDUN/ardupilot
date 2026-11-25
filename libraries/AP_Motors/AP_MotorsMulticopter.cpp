@@ -231,6 +231,22 @@ const AP_Param::GroupInfo AP_MotorsMulticopter::var_info[] = {
     // @User: Advanced
     AP_GROUPINFO("SPOOL_TIM_DN", 44, AP_MotorsMulticopter, _spool_down_time, 0),
 
+#if APM_BUILD_TYPE(APM_BUILD_ArduCopter)
+    // @Param{Copter}: FAIL_ID
+    // @DisplayName: Motor fault injection motor
+    // @Description: Logical motor number for output attenuation on Copter matrix frames, not the physical output channel. Disabled for invalid or unused motor numbers and reversible digital outputs. Applied only in the throttle-unlimited spool state.
+    // @Values: -1:Disabled,1:Motor1,2:Motor2,3:Motor3,4:Motor4,5:Motor5,6:Motor6,7:Motor7,8:Motor8,9:Motor9,10:Motor10,11:Motor11,12:Motor12
+    // @User: Advanced
+    AP_GROUPINFO("FAIL_ID", 45, AP_MotorsMulticopter, _fail_id, -1),
+
+    // @Param{Copter}: FAIL_SCALE
+    // @DisplayName: Motor fault injection retained output
+    // @Description: Fraction of the selected motor's output above the PWM minimum to retain. 1 leaves the output unchanged and 0 reduces it to the PWM minimum. Values outside the range leave the output unchanged.
+    // @Range: 0.0 1.0
+    // @User: Advanced
+    AP_GROUPINFO("FAIL_SCALE", 46, AP_MotorsMulticopter, _fail_scale, 1.0f),
+#endif
+
     AP_GROUPEND
 };
 

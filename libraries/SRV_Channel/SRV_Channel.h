@@ -549,6 +549,10 @@ public:
     // return true if any of the outputs are digital
     static bool have_digital_outputs() { return digital_mask != 0; }
 
+    static bool have_reversible_outputs(SRV_Channel::Aux_servo_function_t function) {
+        return (get_output_channel_mask(function) & reversible_mask) != 0;
+    }
+
     // Set E - stop
     static void set_emergency_stop(bool state);
 

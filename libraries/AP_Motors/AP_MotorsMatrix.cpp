@@ -16,6 +16,7 @@
 #include <AP_HAL/AP_HAL.h>
 #include "AP_MotorsMatrix.h"
 #include <AP_Vehicle/AP_Vehicle_Type.h>
+#include <SRV_Channel/SRV_Channel.h>
 
 extern const AP_HAL::HAL& hal;
 
@@ -174,10 +175,28 @@ void AP_MotorsMatrix::output_to_motors()
             break;
     }
 
+#if APM_BUILD_TYPE(APM_BUILD_ArduCopter)
+    const int16_t fail_index = _fail_id.get() - 1;
+    const float fail_scale = _fail_scale.get();
+    const bool inject_fault = _spool_state == SpoolState::THROTTLE_UNLIMITED && armed() && get_interlock() &&
+                              fail_index >= 0 && fail_index < AP_MOTORS_MAX_NUM_MOTORS && motor_enabled[fail_index] &&
+                              fail_scale >= 0.0f && fail_scale < 1.0f &&
+                              !SRV_Channels::have_reversible_outputs(SRV_Channels::get_motor_function(fail_index));
+#endif
+
     // convert output to PWM and send to each motor
     for (i = 0; i < AP_MOTORS_MAX_NUM_MOTORS; i++) {
         if (motor_enabled[i]) {
-            rc_write(i, output_to_pwm(_actuator[i]));
+            int16_t pwm = output_to_pwm(_actuator[i]);
+#if APM_BUILD_TYPE(APM_BUILD_ArduCopter)
+            if (inject_fault && i == fail_index) {
+                const int16_t pwm_min = get_pwm_output_min();
+                if (pwm_min > 0 && pwm > pwm_min && pwm <= get_pwm_output_max()) {
+                    pwm = pwm_min + fail_scale * (pwm - pwm_min);
+                }
+            }
+#endif
+            rc_write(i, pwm);
         }
     }
 }
